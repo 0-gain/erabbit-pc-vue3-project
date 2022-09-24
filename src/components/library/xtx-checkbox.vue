@@ -7,18 +7,20 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
-defineProps({
+import { ref } from "vue";
+const props = defineProps({
   modelValue: {
     type: Boolean,
     default: false,
   },
 });
 
+const emit = defineEmits(["update:modelValue", "change_check"]);
 const checked = ref(false);
 const changeChecked = () => {
   checked.value = !checked.value;
-  //   使用emit通知父组件数据的改变
+  emit("change_check", checked.value);
+  emit("update:modelValue", checked.value);
 };
 </script>
 <style scoped lang="less">
