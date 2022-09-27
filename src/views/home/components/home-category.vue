@@ -42,7 +42,7 @@
       </h4>
       <ul>
         <li v-for="sub in currCategory.goods" :key="sub.id">
-          <RouterLink to="/">
+          <RouterLink :to="`/product/${sub.id}`">
             <img :src="sub.picture" alt="" />
             <div class="info">
               <p class="name ellipsis-2">{{ sub.desc }}</p>

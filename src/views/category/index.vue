@@ -2,15 +2,15 @@
   <div class="top-category">
     <div class="container">
       <!-- 面包屑 -->
-      <xtxBread>
-        <xtxBreadItem to="/">首页</xtxBreadItem>
+      <XtxBread>
+        <XtxBreadItem to="/">首页</XtxBreadItem>
         <transition name="fade-right" mode="out-in">
           <!-- 不同的key可以创建移除元素，创造触发动画条件 -->
-          <xtxBreadItem :key="topCategory.id">{{
+          <XtxBreadItem :key="topCategory.id">{{
             topCategory.name
-          }}</xtxBreadItem>
+          }}</XtxBreadItem>
         </transition>
-      </xtxBread>
+      </XtxBread>
       <!-- 轮播图 -->
       <XtxCarousel
         :sliders="sliders"
@@ -60,7 +60,6 @@ const route = useRoute();
 
 // 获取轮播图数据
 const sliders = ref([]);
-console.log(sliders);
 reqBanner().then((res) => {
   sliders.value = res.result;
 });
