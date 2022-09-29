@@ -18,8 +18,8 @@
           <GoodsName :goods="productData"></GoodsName>
           <GoodsSku :goods="productData"></GoodsSku>
           <XtxNumbox label="数量" v-model="counts"></XtxNumbox>
-          <XtxButton type="primary" style="margin-top: 20px"
-            s>加入购物车</XtxButton
+          <XtxButton type="primary" style="margin-top: 20px" s
+            >加入购物车</XtxButton
           >
         </div>
       </div>
@@ -29,12 +29,17 @@
       <div class="goods-footer">
         <div class="goods-article">
           <!-- 商品+评价 -->
-          <div class="goods-tabs"></div>
+          <GoodsTabs :counts="productData.commentCount"></GoodsTabs>
           <!-- 注意事项 -->
-          <div class="goods-warn"></div>
+          <div class="goods-warn">
+            <GoodsWarn></GoodsWarn>
+          </div>
         </div>
         <!-- 24热榜+专题推荐 -->
-        <div class="goods-aside"></div>
+        <div class="goods-aside">
+          <GoodsHot :id="goodsId" :type="1"></GoodsHot>
+          <GoodsHot :id="goodsId" :type="3"></GoodsHot>
+        </div>
       </div>
     </div>
   </div>
@@ -44,11 +49,14 @@
 import GoodsRelevant from "./components/goods-relevant.vue";
 import { reqProduct } from "@/api/product";
 import { useRoute } from "vue-router";
-import { ref } from "vue";
+import { ref, provide } from "vue";
 import GoodsImage from "./components/goods-image.vue";
 import GoodsSales from "./components/goods-sales.vue";
 import GoodsName from "./components/goods-name.vue";
 import GoodsSku from "./components/goods-sku.vue";
+import GoodsTabs from "./components/goods-tabs.vue";
+import GoodsHot from "./components/goods-hot.vue";
+import GoodsWarn from "./components/goods-warn.vue";
 
 // 商品详情数据
 const productData = ref(null);
@@ -56,7 +64,7 @@ const route = useRoute();
 
 const counts = ref(1);
 // 商品id
-const goodsId = ref(route.params.id)
+const goodsId = ref(route.params.id);
 
 // 获取商品详情
 reqProduct(route.params.id).then(({ result }) => {
@@ -69,6 +77,9 @@ reqProduct(route.params.id).then(({ result }) => {
   });
   productData.value = result;
 });
+
+// 注入给goods-detail组件
+provide("goods", productData);
 </script>
 <style scoped lang="less">
 .goods-info {
@@ -97,10 +108,7 @@ reqProduct(route.params.id).then(({ result }) => {
     min-height: 1000px;
   }
 }
-.goods-tabs {
-  min-height: 600px;
-  background: #fff;
-}
+
 .goods-warn {
   min-height: 600px;
   background: #fff;
