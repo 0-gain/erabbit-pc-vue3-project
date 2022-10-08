@@ -16,9 +16,9 @@
         </div>
         <div class="spec">
           <GoodsName :goods="productData"></GoodsName>
-          <GoodsSku :goods="productData"></GoodsSku>
-          <XtxNumbox label="数量" v-model="counts"></XtxNumbox>
-          <XtxButton type="primary" style="margin-top: 20px" s
+          <GoodsSku :goods="productData" @change="changeCounts"></GoodsSku>
+          <XtxNumbox label="数量" v-model="counts" :max="max"></XtxNumbox>
+          <XtxButton type="primary" style="margin-top: 20px" @change="addCart"
             >加入购物车</XtxButton
           >
         </div>
@@ -48,6 +48,7 @@
 <script setup>
 import GoodsRelevant from "./components/goods-relevant.vue";
 import { reqProduct } from "@/api/product";
+import { reqAddCart } from "@/api/cart";
 import { useRoute } from "vue-router";
 import { ref, provide } from "vue";
 import GoodsImage from "./components/goods-image.vue";
@@ -57,12 +58,12 @@ import GoodsSku from "./components/goods-sku.vue";
 import GoodsTabs from "./components/goods-tabs.vue";
 import GoodsHot from "./components/goods-hot.vue";
 import GoodsWarn from "./components/goods-warn.vue";
+import Message from "@/components/library/Message";
 
 // 商品详情数据
 const productData = ref(null);
 const route = useRoute();
 
-const counts = ref(1);
 // 商品id
 const goodsId = ref(route.params.id);
 
@@ -80,6 +81,27 @@ reqProduct(route.params.id).then(({ result }) => {
 
 // 注入给goods-detail组件
 provide("goods", productData);
+
+// 与goods-sku子组件通信，获取当前所点击的规格配置的库存
+const counts = ref(0); //购买的数量
+const max = ref(1); //可购买的最大值
+const curSku = ref(null); //当前所选中的配套规格
+const changeCounts = (val) => {
+  counts.value = 1;
+  max.value = val?.inventory - 5000 || 1;
+  curSku.value = val;
+};
+
+const addCart = () => {
+  if (!curSku.value) {
+    Message({ type: "error", text: "请选择完整的规格" });
+  } else {
+    console.log(curSku.value[0].id);
+    // reqAddCart(curSku.value.id,counts).then(res=>{
+    //   console.log(res);
+    // })
+  }
+};
 </script>
 <style scoped lang="less">
 .goods-info {

@@ -1,20 +1,33 @@
 <template>
-  <button class="xtx-button ellipsis" :class="[size, type]">
+  <button
+    class="xtx-button ellipsis"
+    :disabled="isDisable"
+    :class="[size, type]"
+    @click="handClick"
+  >
     <slot />
   </button>
 </template>
 
 <script setup>
 defineProps({
-    size:{
-        type:String,
-        default:'middle'
-    },
-    type:{
-        type:String,
-        default:'default'
-    }
-})
+  size: {
+    type: String,
+    default: "middle",
+  },
+  type: {
+    type: String,
+    default: "default",
+  },
+  isDisable: {
+    type: Boolean,
+    default: false,
+  },
+});
+const emit = defineEmits(['change'])
+const handClick = ()=>{
+  emit('change')
+}
 </script>
 <style scoped lang="less">
 .xtx-button {
@@ -26,6 +39,11 @@ defineProps({
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
+  &:disabled {
+    background-color: #ccc;
+    border: none;
+    cursor: not-allowed;
+  }
 }
 .large {
   width: 240px;

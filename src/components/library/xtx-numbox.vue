@@ -19,7 +19,7 @@ const props = defineProps({
   },
   min: {
     type: Number,
-    default: 1,
+    default: 0,
   },
   max: {
     type: Number,
@@ -33,7 +33,6 @@ const changeNum = (val) => {
   const newValue = num.value + val;
   if (newValue < props.min || newValue > props.max) return;
   num.value = newValue;
-  // emit("change", newValue);
 };
 </script>
 <style scoped lang="less">

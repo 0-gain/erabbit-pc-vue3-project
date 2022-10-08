@@ -8,48 +8,89 @@
         <i class="iconfont icon-msg"></i> 使用短信登录
       </a>
     </div>
-    <div class="form">
-      <template v-if="!isMsgLogin">
-        <div class="form-item">
-          <div class="input">
-            <i class="iconfont icon-user"></i>
-            <input type="text" v-model="phone" placeholder="请输入用户名或手机号" />
+    <Form ref="formCom" :validation-schema="formSchema" v-slot="{ errors }">
+      <div class="form">
+        <template v-if="!isMsgLogin">
+          <div class="form-item">
+            <div class="input">
+              <i class="iconfont icon-user"></i>
+              <Field
+                :class="{ error: errors.account }"
+                type="text"
+                name="account"
+                v-model="form.account"
+                placeholder="请输入用户名或手机号"
+              />
+            </div>
+            <div class="error" v-if="errors.account">
+              <i class="iconfont icon-warning" />{{ errors["account"] }}
+            </div>
           </div>
-          <div class="error"><i class="iconfont icon-warning" />请输入手机号</div>
-        </div>
+          <div class="form-item">
+            <div class="input">
+              <i class="iconfont icon-lock"></i>
+              <Field
+                :class="{ error: errors.password }"
+                type="password"
+                name="password"
+                v-model="form.password"
+                placeholder="请输入密码"
+              />
+            </div>
+            <div class="error" v-if="errors.password">
+              <i class="iconfont icon-warning" />{{ errors["password"] }}
+            </div>
+          </div>
+        </template>
+        <template v-else>
+          <div class="form-item">
+            <div class="input">
+              <i class="iconfont icon-user"></i>
+              <Field
+                :class="{ error: errors.phone }"
+                type="text"
+                name="phone"
+                v-model="form.phone"
+                placeholder="请输入手机号"
+              />
+            </div>
+            <div class="error" v-if="errors.phone">
+              <i class="iconfont icon-warning" />{{ errors["phone"] }}
+            </div>
+          </div>
+          <div class="form-item">
+            <div class="input">
+              <i class="iconfont icon-code"></i>
+              <Field
+                :class="{ error: errors.code }"
+                type="text"
+                v-model="form.code"
+                name="code"
+                placeholder="请输入验证码"
+              />
+              <span class="code">发送验证码</span>
+            </div>
+            <div class="error" v-if="errors.code">
+              <i class="iconfont icon-warning" />{{ errors["code"] }}
+            </div>
+          </div>
+        </template>
         <div class="form-item">
-          <div class="input">
-            <i class="iconfont icon-lock"></i>
-            <input type="password" placeholder="请输入密码" />
+          <div class="agree">
+            <Field as="XtxCheckbox" v-model="form.isAgree" name="isAgree" />
+            <span>我已同意</span>
+            <a href="javascript:;">《隐私条款》</a>
+            <span>和</span>
+            <a href="javascript:;">《服务条款》</a>
+          </div>
+          <div class="error" v-if="errors.isAgree">
+            <i class="iconfont icon-warning" />{{ errors["isAgree"] }}
           </div>
         </div>
-      </template>
-      <template v-else>
-        <div class="form-item">
-          <div class="input">
-            <i class="iconfont icon-user"></i>
-            <input type="text" v-model="phone" placeholder="请输入手机号" />
-          </div>
-        </div>
-        <div class="form-item">
-          <div class="input">
-            <i class="iconfont icon-code"></i>
-            <input type="password" placeholder="请输入验证码" />
-            <span class="code">发送验证码</span>
-          </div>
-        </div>
-      </template>
-      <div class="form-item">
-        <div class="agree">
-          <XtxCheckbox v-model="form.isAgree" />
-          <span>我已同意</span>
-          <a href="javascript:;">《隐私条款》</a>
-          <span>和</span>
-          <a href="javascript:;">《服务条款》</a>
-        </div>
+        <a @click="login()" href="javascript:;" class="btn">登录</a>
       </div>
-      <a href="javascript:;" class="btn">登录</a>
-    </div>
+    </Form>
+
     <div class="action">
       <img
         src="https://qzonestyle.gtimg.cn/qzone/vas/opensns/res/img/Connect_logo_7.png"
@@ -57,7 +98,7 @@
       />
       <div class="url">
         <a href="javascript:;">忘记密码</a>
-        <a href="javascript:;">免费注册</a>
+        <router-link to="/register">免费注册</router-link> 
       </div>
     </div>
   </div>
@@ -65,14 +106,71 @@
 
 <script setup>
 import { ref, reactive } from "vue";
+import { useStore } from "vuex";
+import { useRoute, useRouter } from "vue-router";
+import { Field, Form } from "vee-validate";
+import { reqAccountLogin } from "@/api/user";
+import Message from "@/components/library/Message";
+import schema from "@/utils/vee-validate-schema";
 
 // 是否短信登录
-const isMsgLogin = ref(true);
+const isMsgLogin = ref(false);
 
 // 表单信息对象
-const form = reactive({ isAgree: true });
+const form = reactive({
+  isAgree: true,
+  account: "",
+  phone: "",
+  code: "",
+  password: "",
+});
 
+// 验证信息
+const formSchema = reactive({
+  isAgree: schema.isAgree,
+  account: schema.account,
+  phone: schema.mobile,
+  code: schema.code,
+  password: schema.password,
+});
 
+// 点击登录时，整体校验
+const formCom = ref(null);
+const login = async () => {
+  // Form组件提供一个validate函数作为整体表单校验，返回的是一个promise
+  const valid = await formCom.value.validate();
+  if (valid) {
+    getAccountLogin();
+  }
+};
+
+// 登录
+const store = useStore();
+const route = useRoute();
+const router = useRouter();
+
+const getAccountLogin = () => {
+  reqAccountLogin(form)
+    .then(({ result }) => {
+      // 1.存储信息
+      const { id, account, nickname, avatar, token, mobile } = result;
+      store.commit("user/SET_USER", {
+        id,
+        account,
+        nickname,
+        avatar,
+        token,
+        mobile,
+      });
+      // 2.提示
+      Message({ type: "success", text: "登录成功" });
+      // 3.跳转
+      router.push(route.query.redirectUrl || "/");
+    })
+    .catch((e) => {
+      Message({ type: "error", text: e.response.data.message || "登录失败" });
+    });
+};
 </script>
 <style scoped lang="less">
 .account-box {
@@ -113,8 +211,8 @@ const form = reactive({ isAgree: true });
           width: 100%;
           &.error {
             border-color: @priceColor;
-            height: 200px;
-            background-color: red;
+            // height: 200px;
+            // background-color: red;
           }
           &.active,
           &:focus {

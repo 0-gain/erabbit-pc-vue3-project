@@ -34,8 +34,7 @@ import LoginHeader from "./components/login-header.vue";
 import LoginFooter from "./components/login-footer.vue";
 import LoginForm from "./components/login-form.vue";
 import { ref } from "vue";
-import {Form,Field} from 'vee-validate'
-import veeValidateSchema from "@/utils/vee-validate-schema";
+
 
 const activeName = ref("account");
 </script>

@@ -23,15 +23,16 @@ console.dir(importFn.keys()) 文件名称数组
 const components = import.meta.glob("./*.vue");
 
 import { defineAsyncComponent } from "vue";
+import Message from "./Message";
 
 export default {
   install(app) {
-/*      app.component('XtxSkeleton', xtxSkeleton)
+    /*      app.component('XtxSkeleton', xtxSkeleton)
      app.component('XtxCarousel', xtxCarousel)
      app.component(xtxMore.name, xtxMore)
      app.component('XtxBread', xtxBread)
      app.component('XtxBreadItem', xtxBreadItem) */
-   
+
     //  批量注册全局组件
     for (const [key, value] of Object.entries(components)) {
       const name = key
@@ -44,6 +45,9 @@ export default {
     }
     // 定义指令
     defineDirective(app);
+
+    // 挂载全局属性，能够通过组件实例调用的属性 this.$message
+    app.config.globalProperties.$message = Message;
   },
 };
 

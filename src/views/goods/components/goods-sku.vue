@@ -24,25 +24,50 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 const props = defineProps({
   goods: { type: Object, default: () => ({ specs: [], skus: [] }) },
 });
+const emit = defineEmits(["change"]);
+
+onMounted(() => {
+  startDisabled();
+});
+
+// 禁用，库存不超过5000的
+const startDisabled = () => {
+  const { goods } = props;
+  // 如果只有一个规格则需要，当页面一加载时，就要去禁用库存不足的
+  if (goods.specs.length === 1) {
+    // 存储过滤出来的数组
+    let arr = [];
+    goods.skus.forEach((el) => {
+      if (el.inventory < 5000) {
+        el.specs.forEach((v) => {
+          arr.push(v.valueName);
+        });
+      }
+    });
+
+    // 禁用goods.specs中与arr的valueName相对应的
+    goods.specs[0].values.forEach((el) => {
+      if (arr.some((v) => v == el.name)) {
+        el.isDisabled = true;
+      }
+    });
+  }
+};
 
 // 用来存储当前所点击的选项
 const selectedObj = ref({});
+
 const handleSpecs = (item, val) => {
   if (val.selected) {
     val.selected = false;
-    // // 将所有的isDisabled=false
-    // props.goods.specs.forEach((spec) => {
-    //   spec.values.forEach((el) => {
-    //     el.isDisabled = false;
-    //   });
-    // });
     if (selectedObj.value.hasOwnProperty(item.name)) {
       delete selectedObj.value[item.name];
     }
+    emit("change", null);
   } else if (val.isDisabled) return;
   else {
     //   排他
@@ -51,20 +76,39 @@ const handleSpecs = (item, val) => {
     });
     val.selected = true;
     selectedObj.value[item.name] = val.name;
-    // specMap(item, val);
   }
 };
 
+// (主要用于，点击当前选项后，禁用其他类型的规格没有库存的)
 watch(
   selectedObj,
   (newVal) => {
     // 获取所有的value值
     const arr = Object.values(newVal);
+    console.log(arr);
+
+    // 给父组件传递库存数据
+    if (arr.length === props.goods.specs.length) {
+      let res = props.goods.skus;
+      arr.forEach((v) => {
+        res = res.filter((sku) => {
+          if (sku.specs.some((el) => el.valueName === v)) {
+            return sku;
+          }
+        });
+      });
+      emit("change", res);
+    }
+
+    if (props.goods.specs.length === 1) {
+      return;
+    }
+
     // 找到arr存在的值的数组
     const selectedArr = [];
     props.goods.skus.forEach((sku) => {
       sku.specs.forEach((el) => {
-        if (arr.some((item) => item === el.valueName) && sku.inventory < 9000) {
+        if (arr.some((item) => item === el.valueName) && sku.inventory < 5000) {
           selectedArr.push(sku.specs);
         }
       });
@@ -83,6 +127,7 @@ watch(
     disableArr = disableArr.filter((el) => {
       return arr.every((v) => v !== el.valueName);
     });
+
     // // 给specs中不足库存的属性添加disabled
     props.goods.specs.forEach((spec) => {
       spec.values.forEach((el) => {

@@ -16,7 +16,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue", "change_check"]);
-const checked = ref(false);
+const checked = ref(props.modelValue);
 const changeChecked = () => {
   checked.value = !checked.value;
   emit("change_check", checked.value);
