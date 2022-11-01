@@ -34,7 +34,7 @@ onMounted(() => {
   startDisabled();
 });
 
-// 禁用，库存不超过5000的
+// 禁用，库存不超过0的
 const startDisabled = () => {
   const { goods } = props;
   // 如果只有一个规格则需要，当页面一加载时，就要去禁用库存不足的
@@ -42,7 +42,7 @@ const startDisabled = () => {
     // 存储过滤出来的数组
     let arr = [];
     goods.skus.forEach((el) => {
-      if (el.inventory < 5000) {
+      if (el.inventory < 0) {
         el.specs.forEach((v) => {
           arr.push(v.valueName);
         });
@@ -85,7 +85,6 @@ watch(
   (newVal) => {
     // 获取所有的value值
     const arr = Object.values(newVal);
-    console.log(arr);
 
     // 给父组件传递库存数据
     if (arr.length === props.goods.specs.length) {
@@ -97,7 +96,17 @@ watch(
           }
         });
       });
-      emit("change", res);
+      const sku = res[0];
+      emit("change", {
+        skuId: sku.id,
+        price: sku.price,
+        oldPrice: sku.oldPrice,
+        inventory: sku.inventory,
+        // 属性名：属性值 属性名1：属性值1...
+        specsText: sku.specs
+          .reduce((p, c) => `${p} ${c.name}：${c.valueName}`, "")
+          .trim(),
+      });
     }
 
     if (props.goods.specs.length === 1) {
@@ -108,7 +117,7 @@ watch(
     const selectedArr = [];
     props.goods.skus.forEach((sku) => {
       sku.specs.forEach((el) => {
-        if (arr.some((item) => item === el.valueName) && sku.inventory < 5000) {
+        if (arr.some((item) => item === el.valueName) && sku.inventory < 0) {
           selectedArr.push(sku.specs);
         }
       });
@@ -128,7 +137,7 @@ watch(
       return arr.every((v) => v !== el.valueName);
     });
 
-    // // 给specs中不足库存的属性添加disabled
+    // 给specs中不足库存的属性添加disabled
     props.goods.specs.forEach((spec) => {
       spec.values.forEach((el) => {
         el.isDisabled = false;

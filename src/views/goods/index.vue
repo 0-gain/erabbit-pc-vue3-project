@@ -48,9 +48,9 @@
 <script setup>
 import GoodsRelevant from "./components/goods-relevant.vue";
 import { reqProduct } from "@/api/product";
-import { reqAddCart } from "@/api/cart";
 import { useRoute } from "vue-router";
-import { ref, provide } from "vue";
+import { useStore } from "vuex";
+import { ref, provide, watch } from "vue";
 import GoodsImage from "./components/goods-image.vue";
 import GoodsSales from "./components/goods-sales.vue";
 import GoodsName from "./components/goods-name.vue";
@@ -63,45 +63,73 @@ import Message from "@/components/library/Message";
 // 商品详情数据
 const productData = ref(null);
 const route = useRoute();
+const store = useStore();
 
 // 商品id
 const goodsId = ref(route.params.id);
 
 // 获取商品详情
-reqProduct(route.params.id).then(({ result }) => {
-  result.skus.forEach((sku) => {
-    const sortSpecs = [];
-    result.specs.forEach((spec) => {
-      sortSpecs.push(sku.specs.find((item) => item.name === spec.name));
+const getGoods = () => {
+  reqProduct(route.params.id).then(({ result }) => {
+    result.skus.forEach((sku) => {
+      const sortSpecs = [];
+      result.specs.forEach((spec) => {
+        sortSpecs.push(sku.specs.find((item) => item.name === spec.name));
+      });
+      sku.specs = sortSpecs;
     });
-    sku.specs = sortSpecs;
+    productData.value = result;
   });
-  productData.value = result;
-});
+};
 
 // 注入给goods-detail组件
 provide("goods", productData);
 
 // 与goods-sku子组件通信，获取当前所点击的规格配置的库存
-const counts = ref(0); //购买的数量
+const counts = ref(1); //购买的数量
 const max = ref(1); //可购买的最大值
 const curSku = ref(null); //当前所选中的配套规格
 const changeCounts = (val) => {
-  counts.value = 1;
-  max.value = val?.inventory - 5000 || 1;
+  max.value = val?.inventory || 0;
   curSku.value = val;
 };
 
 const addCart = () => {
-  if (!curSku.value) {
-    Message({ type: "error", text: "请选择完整的规格" });
+  if (curSku.value) {
+    // id skuId name attrsText picture price nowPrice selected stock count isEffective
+    const { skuId, specsText: attrsText, inventory: stock } = curSku.value;
+    const { id, name, price, mainPictures } = productData.value;
+    store
+      .dispatch("cart/getAddCart", {
+        skuId,
+        attrsText,
+        stock,
+        id,
+        name,
+        price,
+        nowPrice: price,
+        picture: mainPictures[0],
+        selected: true,
+        isEffective: true,
+        count: counts.value,
+      })
+      .then(() => {
+        Message({ type: "success", text: "加入购物车成功" });
+      });
   } else {
-    console.log(curSku.value[0].id);
-    // reqAddCart(curSku.value.id,counts).then(res=>{
-    //   console.log(res);
-    // })
+    Message({ type: "error", text: "请选择完整的规格" });
   }
 };
+
+// 侦听路由的变化
+watch(
+  () => route.params.id,
+  (newVal) => {
+    if (newVal && route.path === `/product/${newVal}`) {
+      getGoods()
+    }
+  },{immediate:true}
+);
 </script>
 <style scoped lang="less">
 .goods-info {

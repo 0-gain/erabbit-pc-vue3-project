@@ -15,6 +15,12 @@ export default {
     if (!/^\w{6,24}$/.test(value)) return "密码是6-24个字符";
     return true;
   },
+  // 密码校验
+  rePassword(value,{form}){
+    if(!value) return '请输入密码'
+    if(value !== form.password) return '与上面密码不一致'
+    return true
+  },
   mobile(value) {
     if (!value) return "请输入手机号";
     if (!/^1[3-9]\d{9}$/.test(value)) return "手机号格式错误";

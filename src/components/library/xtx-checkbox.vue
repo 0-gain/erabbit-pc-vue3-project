@@ -1,13 +1,12 @@
 <template>
   <div class="xtx-checkbox" @click="changeChecked()">
-    <i v-if="checked" class="iconfont icon-checked"></i>
+    <i v-if="modelValue" class="iconfont icon-checked"></i>
     <i v-else class="iconfont icon-unchecked"></i>
     <span v-if="$slots.default"><slot /></span>
   </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
 const props = defineProps({
   modelValue: {
     type: Boolean,
@@ -15,12 +14,9 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["update:modelValue", "change_check"]);
-const checked = ref(props.modelValue);
+const emit = defineEmits(["update:modelValue"]);
 const changeChecked = () => {
-  checked.value = !checked.value;
-  emit("change_check", checked.value);
-  emit("update:modelValue", checked.value);
+  emit("update:modelValue", !props.modelValue);
 };
 </script>
 <style scoped lang="less">

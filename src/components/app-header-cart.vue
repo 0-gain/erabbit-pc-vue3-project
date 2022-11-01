@@ -1,25 +1,29 @@
 <template>
-  <div class="cart">
+  <div class="cart" @mouseenter="$store.dispatch('cart/getCartList')">
     <a class="curr" href="javascript:;">
-      <i class="iconfont icon-cart"></i><em>2</em>
+      <i class="iconfont icon-cart"></i
+      ><em>{{ $store.getters["cart/validTotal"] }}</em>
     </a>
     <div class="layer">
       <div class="list">
-        <div class="item" v-for="i in 4" :key="i">
-          <RouterLink to="">
-            <img
-              src="https://yanxuan-item.nosdn.127.net/ead73130f3dbdb3cabe1c7b0f4fd3d28.png"
-              alt=""
-            />
+        <div
+          class="item"
+          v-for="(i, index) in $store.getters['cart/validList']"
+          :key="index"
+        >
+          <RouterLink :to="`/product/${i.id}`">
+            <img :src="i.picture" alt="" />
             <div class="center">
               <p class="name ellipsis-2">
-                和手足干裂说拜拜 ingrams手足皲裂修复霜
+                {{ i.name }}
               </p>
-              <p class="attr ellipsis">颜色：修复绿瓶 容量：150ml</p>
+              <p class="attr ellipsis">{{ i.attrsText }}</p>
             </div>
             <div class="right">
-              <p class="price">&yen;45.00</p>
-              <p class="count">x2</p>
+              <p class="price">&yen;{{ i.nowPrice }}</p>
+              <p class="count" @click="handleCleanCart(i.skuId)">
+                x{{ i.count }}
+              </p>
             </div>
           </RouterLink>
           <i class="iconfont icon-close-new"></i>
@@ -27,16 +31,28 @@
       </div>
       <div class="foot">
         <div class="total">
-          <p>共 3 件商品</p>
-          <p>&yen;135.00</p>
+          <p>共 {{ $store.getters["cart/validTotal"] }} 件商品</p>
+          <p>&yen;{{ $store.getters["cart/validAmount"] }}</p>
         </div>
-        <XtxButton type="plain">去购物车结算</XtxButton>
+        <XtxButton type="plain" @click="$router.push('/car')">去购物车结算</XtxButton>
       </div>
     </div>
   </div>
 </template>
 
-<script setup></script>
+<script setup>
+import { useStore } from "vuex";
+import Message from "@/components/library/Message";
+const store = useStore();
+
+// 删除单个商品
+const handleCleanCart = (skuId) => {
+  store.dispatch("cart/getCleanCart", { skuId }).then((res) => {
+    Message({ type: "success", text: "删除成功" });
+  });
+};
+
+</script>
 <style scoped lang="less">
 .cart {
   width: 50px;

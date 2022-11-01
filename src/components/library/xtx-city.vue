@@ -27,7 +27,7 @@ import { ref, computed, reactive } from "vue";
 defineProps({
   fullLocation: {
     type: String,
-    default: "请选择配送地址",
+    default: "江西省 萍乡市 湘东区",
   },
 });
 const emit = defineEmits(["change"]);

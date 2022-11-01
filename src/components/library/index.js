@@ -24,6 +24,7 @@ const components = import.meta.glob("./*.vue");
 
 import { defineAsyncComponent } from "vue";
 import Message from "./Message";
+import Confirm from "./confirm";
 
 export default {
   install(app) {
@@ -45,9 +46,6 @@ export default {
     }
     // 定义指令
     defineDirective(app);
-
-    // 挂载全局属性，能够通过组件实例调用的属性 this.$message
-    app.config.globalProperties.$message = Message;
   },
 };
 
