@@ -1,4 +1,12 @@
-import { reqAddCart, reqNewCartGoods } from "@/api/cart";
+import {
+  reqAddCart,
+  reqDeleteCart,
+  reqCartList,
+  reqNewCartGoods,
+  reqMergeLocalCart,
+  reqUpdateCart,
+  reqCheckAll,
+} from "@/api/cart";
 
 export default {
   namespaced: true,
@@ -6,8 +14,6 @@ export default {
     return {
       // 购物车商品列表
       list: [],
-      // 购物车列表
-      cartList: [],
     };
   },
   mutations: {
@@ -38,20 +44,28 @@ export default {
         updateGoods[key] = goods[key];
       }
     },
+
+    // 设置购物车列表
+    SET_CART_LIST(state, list) {
+      state.list = list;
+    },
   },
   actions: {
     // 加入购物车
-    getAddCart({ commit, dispatch, rootState }, goods) {
+    getAddCart({ commit, rootState }, goods) {
       return new Promise((resolve, reject) => {
         const { token } = rootState.user.profile;
         if (token) {
           // 登录后加入购物车
-          // const res = await reqAddCart(skuId, counts);
-          // if (res.msg === "操作成功") {
-          //   Message({ type: "success", text: "添加购物车成功" });
-          //   commit("ADD_CART", res.result);
-          //   dispatch("getCartList");
-          // }
+          let { count, skuId } = goods;
+          reqAddCart(skuId, count)
+            .then((res) => {
+              commit("ADD_CART", res.result);
+              resolve();
+            })
+            .catch((err) => {
+              reject(err);
+            });
         } else {
           // 未登录
           commit("ADD_CART", goods);
@@ -65,6 +79,14 @@ export default {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录TODO
+          reqCartList()
+            .then((res) => {
+              commit("SET_CART_LIST", res.result);
+              resolve();
+            })
+            .catch((err) => {
+              reject(err);
+            });
         } else {
           // 本地
           // Promise.all() 可以并列发送多个请求，等所有请求成功，调用then
@@ -89,10 +111,18 @@ export default {
     },
 
     // 删除/清空购物车
-    getDeleteCart({ commit, state, rootState }, skuId) {
+    getDeleteCart({ commit, dispatch, rootState }, skuId) {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录
+          reqDeleteCart([skuId])
+            .then((res) => {
+              dispatch("getCartList");
+              resolve();
+            })
+            .catch((err) => {
+              reject(err);
+            });
         } else {
           commit("DELETE_CART", skuId);
           resolve();
@@ -105,6 +135,15 @@ export default {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录TODO
+          const ids = getters.selectedList.map((item) => item.skuId);
+          reqDeleteCart(ids)
+            .then((res) => {
+              return reqCartList();
+            })
+            .then((res) => {
+              commit("SET_CART_LIST", res.result);
+              resolve();
+            });
         } else {
           // 本地
           // 1.获取选中商品列表，进行遍历调用DELETE_CART
@@ -121,45 +160,83 @@ export default {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录
+          reqUpdateCart(goods)
+            .then((res) => {
+              return reqCartList();
+            })
+            .then((res) => {
+              commit("SET_CART_LIST", res.result);
+              resolve();
+            });
         } else {
           // 本地
-          commit('UPDATE_CART',goods)
+          commit("UPDATE_CART", goods);
         }
       });
     },
 
     // 更新商品sku规格
-    updateCartSku({ commit, state, rootState }, {oldSkuId,newSku }) {
+    updateCartSku({ commit, state, rootState }, { oldSkuId, newSku }) {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录
+          // 1.获取原先商品
+          const oldGoods = state.list.find((item) => item.skuId === oldSkuId);
+          // 2.删除原先商品
+          reqDeleteCart([oldSkuId])
+            .then((res) => {
+              // 3.插入修改后的商品
+              return reqAddCart(newSku.skuId, oldGoods.count);
+            })
+            .then((res) => {
+              return reqCartList();
+            })
+            .then((res) => {
+              commit("SET_CART_LIST", res.result);
+              resolve();
+            });
         } else {
           // 本地
           // 1.先获取旧的商品信息
           const oldGoods = state.list.find((item) => item.skuId === oldSkuId);
           // 2.删除旧的商品
-          commit('DELETE_CART',oldSkuId)
+          commit("DELETE_CART", oldSkuId);
           // 3.合并一条新的商品信息
-          const {inventory:stock,specsText:attrsText,skuId,price:nowPrice,oldPrice} = newSku
+          const {
+            inventory: stock,
+            specsText: attrsText,
+            skuId,
+            price: nowPrice,
+            oldPrice,
+          } = newSku;
           const newGoods = {
             ...oldGoods,
             stock,
             attrsText,
             skuId,
             nowPrice,
-            oldPrice
-          }
+            oldPrice,
+          };
           commit("ADD_CART", newGoods);
           resolve();
         }
       });
     },
-    
+
     // 全选or反选
     checkAllCart({ commit, rootState, getters }, selected) {
       return new Promise((resolve, reject) => {
         if (rootState.user.profile.token) {
           // 登录
+          const ids = getters.validList.map((item) => item.skuId);
+          reqCheckAll({ selected, ids })
+            .then(() => {
+              return reqCartList();
+            })
+            .then((res) => {
+              commit("SET_CART_LIST", res.result);
+              resolve();
+            });
         } else {
           // 本地
           // 获取有效得商品列表，遍历的去调用修改mutations
@@ -169,6 +246,18 @@ export default {
           resolve();
         }
       });
+    },
+
+    // 合并本地购物车
+    async mergeLocalCart({ commit, getters }) {
+      // 存储token后调用合并API接口函数进行购物合并
+      const cartList = getters.validList.map(({ skuId, selected, count }) => {
+        return { skuId, selected, count };
+      });
+      await reqMergeLocalCart(cartList);
+
+      // 合并成功将本地购物车删除
+      commit("SET_CART_LIST", []);
     },
   },
   getters: {

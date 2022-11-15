@@ -36,7 +36,7 @@ const props = defineProps({
     default: () => {},
   },
 });
-const fullLocation = ref("请选择配送地址");
+const fullLocation = ref("江西省 萍乡市 湘东区");
 
 // 城市选中事件处理函数
 const changeCity = (res) => {

@@ -16,10 +16,10 @@ export default {
     return true;
   },
   // 密码校验
-  rePassword(value,{form}){
-    if(!value) return '请输入密码'
-    if(value !== form.password) return '与上面密码不一致'
-    return true
+  rePassword(value, { form }) {
+    if (!value) return "请输入密码";
+    if (value !== form.password) return "与上面密码不一致";
+    return true;
   },
   mobile(value) {
     if (!value) return "请输入手机号";
@@ -33,6 +33,12 @@ export default {
   },
   isAgree(value) {
     if (!value) return "请勾选同意用户协议";
+    return true;
+  },
+  postalCode(value) {
+    if (value) {
+      if (!/^[1-9][0-9]{5}$/.test(value.toString)) return "邮编格式不正确";
+    }
     return true;
   },
 };

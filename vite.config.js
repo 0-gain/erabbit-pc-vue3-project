@@ -2,6 +2,7 @@ import { fileURLToPath, URL } from "node:url";
 
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import vueJsx from "@vitejs/plugin-vue-jsx";
 import VueSetupExtend from "vite-plugin-vue-setup-extend";
 
 import resolveExternalsPlugin from "vite-plugin-resolve-externals";
@@ -9,7 +10,12 @@ import path from "path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue(), VueSetupExtend(), resolveExternalsPlugin({ qc: "QC" })],
+  plugins: [
+    vue(),
+    vueJsx(),
+    VueSetupExtend(),
+    resolveExternalsPlugin({ qc: "QC" }),
+  ],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -29,8 +35,8 @@ export default defineConfig({
     },
   },
   server: {
-    port:8080,//设置服务启动端口号
-    cors:true,
+    port: 8080, //设置服务启动端口号
+    cors: true,
     proxy: {
       "/api": {
         target: "http://pcapi-xiaotuxian-front-devtest.itheima.net/",

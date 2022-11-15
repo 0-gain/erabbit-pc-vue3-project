@@ -1,67 +1,66 @@
 <template>
-  <div class="xtx-confirm" :class="{ fade }">
+  <div class="xtx-dialog" :class="{ fade }" v-show="visible">
     <div class="wrapper" :class="{ fade }">
       <div class="header">
-        <h3>温馨提示</h3>
-        <a href="JavaScript:;" class="iconfont icon-close-new"  @click="cancelCallback()"></a>
+        <h3>{{ title }}</h3>
+        <a href="JavaScript:;" class="iconfont icon-close-new" @click="close()"></a>
       </div>
       <div class="body">
-        <i class="iconfont icon-warning"></i>
-        <span>{{text}}</span>
+        <slot />
       </div>
       <div class="footer">
-        <XtxButton @click="cancelCallback()" size="mini" type="gray"
-          >取消</XtxButton
-        >
-        <XtxButton @click="submitCallback()" size="mini" type="primary"
-          >确认</XtxButton
-        >
+        <slot name="footer" />
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// 当前组件不是在APP下进行渲染，无法使用APP下的环境（全局组件，全局指令，原型属性函数）
-import XtxButton from "@/components/library/xtx-button.vue";
-import { onMounted, ref } from "vue";
+import { ref, watch } from "vue";
+
 const props = defineProps({
   title: {
     type: String,
-    default: "温馨提示",
+    default: "",
   },
-  text: String,
-  submitCallback: {
-    type: Function,
-  },
-  cancelCallback: {
-    type: Function,
+  visible: {
+    type: Boolean,
+    default: false,
   },
 });
+const emit = defineEmits(['update:visible'])
+const fade = ref(true);
 
-const fade = ref(false);
-onMounted(() => {
-  // 当元素渲染完毕立即过渡的动画不会触发
-  setTimeout(() => {
-    fade.value = true;
-  }, 0);
-});
+watch(
+  () => props.visible,
+  () => {
+    setTimeout(() => {
+      fade.value = props.visible;
+    }, 0);
+  },
+  { immediate: true }
+);
+
+// 关闭时通知父组件
+const close = () => {
+  emit("update:visible", false);
+};
 </script>
 <style scoped lang="less">
-.xtx-confirm {
+.xtx-dialog {
   position: fixed;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
-  z-index: 8888;
+  z-index: 8887;
   background: rgba(0, 0, 0, 0);
   &.fade {
     transition: all 0.4s;
     background: rgba(0, 0, 0, 0.5);
   }
   .wrapper {
-    width: 400px;
+    width: 600px;
     background: #fff;
     border-radius: 4px;
     position: absolute;
@@ -74,12 +73,6 @@ onMounted(() => {
       transform: translate(-50%, -50%);
       opacity: 1;
     }
-    .header,
-    .footer {
-      height: 50px;
-      line-height: 50px;
-      padding: 0 20px;
-    }
     .body {
       padding: 20px 40px;
       font-size: 16px;
@@ -90,22 +83,24 @@ onMounted(() => {
       }
     }
     .footer {
-      text-align: right;
-      .xtx-button {
-        margin-left: 20px;
-      }
+      text-align: center;
+      padding: 10px 0 30px 0;
     }
     .header {
       position: relative;
+      height: 70px;
+      line-height: 70px;
+      padding: 0 20px;
+      border-bottom: 1px solid #f5f5f5;
       h3 {
         font-weight: normal;
         font-size: 18px;
       }
       a {
         position: absolute;
-        right: 15px;
-        top: 15px;
-        font-size: 20px;
+        right: 25px;
+        top: 25px;
+        font-size: 24px;
         width: 20px;
         height: 20px;
         line-height: 20px;

@@ -92,7 +92,6 @@
     </Form>
 
     <div class="action">
-      
       <a
         href="https://graph.qq.com/oauth2.0/authorize?client_id=100556005&response_type=token&scope=all&redirect_uri=http%3A%2F%2Fwww.corho.com%3A8080%2F%23%2Flogin%2Fcallback"
       >
@@ -117,7 +116,6 @@ import { Field, Form } from "vee-validate";
 import { reqAccountLogin } from "@/api/user";
 import Message from "@/components/library/Message";
 import schema from "@/utils/vee-validate-schema";
-
 
 // 是否短信登录
 const isMsgLogin = ref(false);
@@ -168,10 +166,13 @@ const getAccountLogin = () => {
         token,
         mobile,
       });
-      // 2.提示
-      Message({ type: "success", text: "登录成功" });
-      // 3.跳转
-      router.push(route.query.redirectUrl || "/");
+      // 合并购物车操作
+      store.dispatch("cart/mergeLocalCart").then(() => {
+        // 2.提示
+        Message({ type: "success", text: "登录成功" });
+        // 3.跳转
+        router.push(route.query.redirectUrl || "/");
+      });
     })
     .catch((e) => {
       Message({ type: "error", text: e.response.data.message || "登录失败" });

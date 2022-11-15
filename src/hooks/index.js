@@ -1,5 +1,7 @@
-import { useIntersectionObserver, useMouseInElement } from "@vueuse/core";
-import { reactive, ref, watch } from "vue";
+import { useIntersectionObserver, useIntervalFn, useMouseInElement } from "@vueuse/core";
+import { reactive, ref, watch,onUnmounted } from "vue";
+import dayjs from 'dayjs'
+
 
 // 数据懒加载
 export const useLazyData = (apiFn) => {
@@ -74,3 +76,32 @@ export const usePreviewImg = () => {
   });
   return { target, position, bgPosition,show };
 };
+
+// 支付倒计时函数
+export const usePayTime = ()=>{
+  // 倒计时逻辑
+  const time = ref(0)
+  const timeText = ref('')
+  const {pause,resume}  = useIntervalFn(()=>{
+    time.value--
+    timeText.value = dayjs.unix(time.value).format('mm分ss秒')
+    if(time.value <= 0){
+      pause()
+    }
+  },1000,false)
+
+  onUnmounted(()=>{
+    pause()
+  })
+
+  // 开启定时器
+  const start = (countdown) => {
+    time.value = countdown
+    timeText.value = dayjs.unix(time.value).format('mm分ss秒')
+    resume()
+  }
+  return {
+    start,
+    timeText
+  }
+}

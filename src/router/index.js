@@ -1,9 +1,16 @@
-import { createRouter, createWebHistory,createWebHashHistory } from "vue-router";
+import {
+  createRouter,
+  createWebHistory,
+  createWebHashHistory,
+  RouterView,
+} from "vue-router";
+
+import store from "@/store";
 
 const router = createRouter({
   // todo 去除路由中的#号（history模式）
   // history: createWebHistory(import.meta.env.BASE_URL),
-  history:createWebHashHistory(),
+  history: createWebHashHistory(),
   routes: [
     {
       path: "/",
@@ -32,6 +39,22 @@ const router = createRouter({
           component: () => import("@/views/register/index.vue"),
         },
         {
+          path: "/car",
+          component: () => import("@/views/cart/index.vue"),
+        },
+        {
+          path: "/member/checkout",
+          component: () => import("@/views/member/pay/checkout.vue"),
+        },
+        {
+          path: "/member/pay",
+          component: () => import("@/views/member/pay/index.vue"),
+        },
+        {
+          path: "/pay/callback",
+          component: () => import("@/views/member/pay/result.vue"),
+        },
+        {
           path: "/member",
           component: () => import("@/views/member/layout.vue"),
           children: [
@@ -39,21 +62,25 @@ const router = createRouter({
               path: "/member",
               component: () => import("@/views/member/home/index.vue"),
             },
+            {
+              path: "/member/order",
+              // 创建一个RouterView容器形成嵌套关系
+              component: RouterView,
+              children: [
+                {
+                  path: "",
+                  component: () => import("@/views/member/order/index.vue"),
+                },
+                { path: ":id", component: ()=>import("@/views/member/order/order-detail.vue") },
+              ],
+            },
           ],
         },
-        {
-          path:'/car',
-          component:()=>import('@/views/cart/index.vue')
-        }
       ],
     },
     {
       path: "/login",
-      component: () => import("@/views/login/index.vue")
-    },
-    {
-      path:'/login/callback',
-      component:()=>import("@/views/login/callback.vue")
+      component: () => import("@/views/login/index.vue"),
     },
     {
       path: "/login/callback",
@@ -62,4 +89,14 @@ const router = createRouter({
   ],
 });
 
+// 前置导航守卫
+router.beforeEach((to, from, next) => {
+  // 用户信息
+  const { token } = store.state.user.profile;
+  // 跳转去member开头的地址却没有登录
+  if (to.path.startsWith("/member") && !token) {
+    next({ path: "/login", query: { redirectUrl: to.fullPath } });
+  }
+  next();
+});
 export default router;

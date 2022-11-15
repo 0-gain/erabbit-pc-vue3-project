@@ -53,7 +53,7 @@
                 </div>
               </td>
               <td class="tc">
-                <p>&yen;{{ i.nowPrice }}.00</p>
+                <p>&yen;{{ i.nowPrice }}</p>
                 <p v-if="i.nowPrice - i.price">
                   比加入时降价
                   <span class="red">&yen;{{ i.nowPrice - i.price }}</span>
@@ -68,7 +68,9 @@
                 />
               </td>
               <td class="tc">
-                <p class="f16 red">&yen;{{ i.nowPrice * i.count }}</p>
+                <p class="f16 red">
+                  &yen;{{ (i.nowPrice * i.count).toFixed(2) }}
+                </p>
               </td>
               <td class="tc">
                 <p><a href="javascript:;">移入收藏夹</a></p>
@@ -134,7 +136,7 @@
           {{ $store.getters["cart/selectedList"].length }}
           件，商品合计：
           <span class="red">¥{{ $store.getters["cart/selectedAmount"] }}</span>
-          <XtxButton type="primary">下单结算</XtxButton>
+          <XtxButton type="primary" @change="goCheckOut()">下单结算</XtxButton>
         </div>
       </div>
       <!-- 猜你喜欢 -->
@@ -145,6 +147,7 @@
 
 <script setup>
 import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 import CartSku from "./components/cart-sku.vue";
 import GoodsRelevant from "../goods/components/goods-relevant.vue";
 import Confirm from "@/components/library/confirm";
@@ -158,32 +161,32 @@ const handleOneCheck = (skuId, selected) => {
 
 // 批量删除
 const batchDeleteGoods = () => {
-  Confirm({ text: "您确定从购物车删除该商品吗？" })
-    .then((res) => {
-      store
-        .dispatch("cart/batchDeleteCart")
-        .then((res) => {
-          Message({ type: "success", text: "删除成功" });
-        })
-        .catch((err) => {
-          Message({ type: "error", text: "删除失败" });
-        });
-    })
-    .catch((err) => {
-      Message({ type: "error", text: "已取消删除" });
-    });
+  // Confirm({ text: "您确定从购物车删除该商品吗？" })
+  //   .then((res) => {
+  //     store
+  //       .dispatch("cart/batchDeleteCart")
+  //       .then((res) => {
+  //         Message({ type: "success", text: "删除成功" });
+  //       })
+  //       .catch((err) => {
+  //         Message({ type: "error", text: "删除失败" });
+  //       });
+  //   })
+  //   .catch((err) => {
+  //     Message({ type: "error", text: "已取消删除" });
+  //   });
 };
 // 删除某个商品
 const handleDeleteOneCart = (skuId) => {
-  Confirm({ text: "您确定从购物车删除该商品吗？" })
-    .then(() => {
-      store.dispatch("cart/getDeleteCart", skuId).then((res) => {
-        Message({ type: "success", text: "删除成功" });
-      });
-    })
-    .catch((e) => {
-      Message({ type: "error", text: "已取消删除" });
-    });
+  // Confirm({ text: "您确定从购物车删除该商品吗？" })
+  //   .then(() => {
+  //     store.dispatch("cart/getDeleteCart", skuId).then((res) => {
+  //       Message({ type: "success", text: "删除成功" });
+  //     });
+  //   })
+  //   .catch((e) => {
+  //     Message({ type: "error", text: "已取消删除" });
+  //   });
 };
 
 // 更新商品数量
@@ -192,13 +195,33 @@ const changeCount = (skuId, count) => {
 };
 
 // 修改规格
-const updateCartSku = (oldSkuId,newSku)=>{
-  store.dispatch('cart/updateCartSku',{oldSkuId,newSku})
-}
+const updateCartSku = (oldSkuId, newSku) => {
+  store.dispatch("cart/updateCartSku", { oldSkuId, newSku });
+};
 
 // 全选商品
 const handleAllCheck = (selected) => {
   store.dispatch("cart/checkAllCart", selected);
+};
+
+// 跳转结算页面
+const router = useRouter();
+const goCheckOut = () => {
+  // 1.判断是否选择有效商品
+  if (store.getters["cart/selectedAmount"] === 0)
+    return Message({ text: "至少选中一件商品才能结算", type: "error" });
+  // 2.判断是否已经登录，未登录 弹窗提示
+  // 3.进行跳转
+  if (!store.state.user.profile.token) {
+    Confirm({ text:"下单结算需要登录，您是否去登录？"})
+      .then(() => {
+        // 点击确认
+        router.push("/login");
+      })
+      .catch((err) => {});
+  } else {
+    router.push("/member/checkout");
+  }
 };
 </script>
 <style scoped lang="less">

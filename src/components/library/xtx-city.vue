@@ -1,8 +1,8 @@
 <template>
   <div class="xtx-city" ref="target">
     <div class="select" @click="toggleDialog" :class="{ active }">
-      <span class="placeholder">{{ fullLocation }}</span>
-      <span class="value"></span>
+      <span class="placeholder" v-if="!fullLocation">{{ placeholder }}</span>
+      <span class="value" v-else>{{ fullLocation }}</span>
       <i class="iconfont icon-angle-down"></i>
     </div>
     <div class="option" v-if="active">
@@ -27,8 +27,9 @@ import { ref, computed, reactive } from "vue";
 defineProps({
   fullLocation: {
     type: String,
-    default: "江西省 萍乡市 湘东区",
+    default:"",
   },
+  placeholder: String,
 });
 const emit = defineEmits(["change"]);
 // 控制展开收起，默认收起

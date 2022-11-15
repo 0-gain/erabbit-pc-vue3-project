@@ -1,12 +1,19 @@
 <template>
   <ul class="app-header-nav">
     <li class="home"><RouterLink to="/">首页</RouterLink></li>
-    <li v-for="(item, index) in categoryList" :key="index">
-      <router-link :to="`/category/${item.id}`">{{ item.name }}</router-link>
-      <div class="layer">
+    <li
+      v-for="(item, index) in categoryList"
+      :key="index"
+      @mouseenter="show(item)"
+      @mouseleave="hide(item)"
+    >
+      <router-link :to="`/category/${item.id}`" @click="hide(item)">{{
+        item.name
+      }}</router-link>
+      <div class="layer" :class="{ open: item.open }">
         <ul>
           <li v-for="(c, index) in item.children" :key="index">
-            <router-link :to="`/category/sub/${c.id}`">
+            <router-link :to="`/category/sub/${c.id}`" @click="hide(item)">
               <img :src="c.picture" alt="" />
               <p>{{ c.name }}</p>
             </router-link>
@@ -26,6 +33,12 @@ store.dispatch("category/getAllCategory");
 const categoryList = computed(() => {
   return store.state.category.categoryList;
 });
+const show = (item) => {
+  store.commit("category/SHOW", item);
+};
+const hide = (item) => {
+  store.commit("category/HIDE", item);
+};
 </script>
 <style scoped lang="less">
 .app-header-nav {
@@ -50,10 +63,10 @@ const categoryList = computed(() => {
         color: @xtxColor;
         border-bottom: 1px solid @xtxColor;
       }
-      > .layer {
-        height: 132px;
-        opacity: 1;
-      }
+      // > .layer {
+      //   height: 132px;
+      //   opacity: 1;
+      // }
     }
   }
 }
@@ -90,6 +103,10 @@ const categoryList = computed(() => {
         }
       }
     }
+  }
+  &.open {
+    height: 132px;
+    opacity: 1;
   }
 }
 </style>

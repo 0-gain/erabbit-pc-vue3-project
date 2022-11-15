@@ -36,7 +36,10 @@ const profile = store.state.user.profile;
 
 // 退出登录
 const logout = () => {
+  // 清空用户数据
   store.commit("user/SET_USER", {});
+  // 清空购物车
+  store.commit('cart/SET_CART_LIST',[])
   router.push("/login");
 };
 </script>
